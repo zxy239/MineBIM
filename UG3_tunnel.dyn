@@ -1,0 +1,482 @@
+{
+  "Uuid": "b8526da9-9840-4b4e-babf-f1186bed8bd8",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "workshop",
+  "ElementResolver": {
+    "ResolutionMap": {}
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\npoints_list = IN[0]\r\n\r\ngrouped_points = []\r\n\r\nfor i in range(0, len(points_list), 15):\r\n    grouped_points.append(points_list[i:i+15])\r\n\r\nOUT = grouped_points\r\n",
+      "Engine": "CPython3",
+      "EngineName": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "def7d4fb60bd4d00921b1888c3327baa",
+      "Inputs": [
+        {
+          "Id": "128ec7e35d204390bb05c7ed34e8cb89",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "0cab8903eaa342a59bd2c31284238429",
+          "Name": "OUT",
+          "Description": "Python 脚本结果",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Runs an embedded Python script."
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Elements.AdaptiveComponent.ByPoints@Autodesk.DesignScript.Geometry.Point[][],Revit.Elements.FamilyType",
+      "Id": "dfb2c2cb077042d99526490ba573beeb",
+      "Inputs": [
+        {
+          "Id": "5ec2599f189a4e8e916c1373e86a66ac",
+          "Name": "points",
+          "Description": "a two-dimensional array of points\n\nPoint[][]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "02bd980acd934fdf80704643c177e7ee",
+          "Name": "familyType",
+          "Description": "a family type to use to create the adaptive components\n\nFamilyType",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "815f10c7286a42e59f58b8d1ef8e9613",
+          "Name": "AdaptiveComponent[]..[]",
+          "Description": "AdaptiveComponent[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Create a list of adaptive components from two-dimensional array of points\n\nAdaptiveComponent.ByPoints (points: Point[][], familyType: FamilyType): AdaptiveComponent[]..[]"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.Point.ByCoordinates@double,double,double",
+      "Id": "441e145cccc3416a9a4d41284840d48e",
+      "Inputs": [
+        {
+          "Id": "251130b76dc642c5bbac511ea7c861a2",
+          "Name": "x",
+          "Description": "X coordinate\n\ndouble\nDefault value : 0",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "bf6bdf7b59824ae3a2517da1447e728d",
+          "Name": "y",
+          "Description": "Y coordinate\n\ndouble\nDefault value : 0",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "6fedefd540254d3e8608e9c5526bd46f",
+          "Name": "z",
+          "Description": "Z coordinate\n\ndouble\nDefault value : 0",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8ea4d43fc80e41f8b3622f983ae0b682",
+          "Name": "Point",
+          "Description": "Point created by coordinates",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Form a Point given 3 cartesian coordinates\n\nPoint.ByCoordinates (x: double = 0, y: double = 0, z: double = 0): Point"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "HintPath": "D:\\PhdData\\MiningBIM\\0508\\output.csv",
+      "InputValue": ".\\output.csv",
+      "NodeType": "ExtensionNode",
+      "Id": "4309d1385d3f4344ade418843116b306",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "af64b3389f6447d5863eabc18557896f",
+          "Name": "",
+          "Description": "文件路径",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows you to select a file on the system and returns its file path"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "x[0];\ny[1];\nz[2];",
+      "Id": "58ece8882f8e40daab28aff39a690e4b",
+      "Inputs": [
+        {
+          "Id": "cad71c01be2445088bb2e2ca6a4db69d",
+          "Name": "x",
+          "Description": "x",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ff7dcd8325e448e48d5c2471463e59ee",
+          "Name": "y",
+          "Description": "y",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "555b263bc2ea4af1af153271a5b80d22",
+          "Name": "z",
+          "Description": "z",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "148cf7f2610f4164a590b4e1cdd101eb",
+          "Name": "",
+          "Description": "Value of expression at line 1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "e2cf931326214a0fa3844f2521582802",
+          "Name": "",
+          "Description": "Value of expression at line 2",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "df876cd0fa214261b45653b912141675",
+          "Name": "",
+          "Description": "Value of expression at line 3",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "Allows for DesignScript code to be authored directly"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSOffice.Data.ImportCSV@string,bool",
+      "Id": "e8aa411b6ec848bf88f8160095e13d10",
+      "Inputs": [
+        {
+          "Id": "bb25b2ff2463411283bab6d401fcf763",
+          "Name": "filePath",
+          "Description": "CSV file to be converted into a list\n\nstring",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "341cb8e2c3774838bbb065a4fd3e408c",
+          "Name": "transpose",
+          "Description": "Toggle to transpose the imported data\n\nbool\nDefault value : false",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "6f3edfcb1ffd4b49817eee7c39ecd251",
+          "Name": "list",
+          "Description": "List containing the items in the CSV file",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Imports data from a CSV (comma separated values) file, put the items into a list and transpose it if needed.\n\nData.ImportCSV (filePath: string, transpose: bool = false): var[]..[]"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.FamilyTypes, DSRevitNodesUI",
+      "SelectedIndex": 182,
+      "SelectedString": "tunnel_void:tunnel_void",
+      "NodeType": "ExtensionNode",
+      "Id": "62f757ef7bef46cd89d9800639970936",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "f8c5c2f094004bc097911df1e5b30819",
+          "Name": "Family Type",
+          "Description": "选定的 Family Type",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "All family types available in the document."
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "0cab8903eaa342a59bd2c31284238429",
+      "End": "5ec2599f189a4e8e916c1373e86a66ac",
+      "Id": "764a49724c504c7ca0a73c38676f095f",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8ea4d43fc80e41f8b3622f983ae0b682",
+      "End": "128ec7e35d204390bb05c7ed34e8cb89",
+      "Id": "2e82ae614bac43aa9617d60f1d3b7105",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "af64b3389f6447d5863eabc18557896f",
+      "End": "bb25b2ff2463411283bab6d401fcf763",
+      "Id": "c65fa118a0274557b6e3d41c6cc74135",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "148cf7f2610f4164a590b4e1cdd101eb",
+      "End": "251130b76dc642c5bbac511ea7c861a2",
+      "Id": "170544664ad144468342aebe1c17604d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "e2cf931326214a0fa3844f2521582802",
+      "End": "bf6bdf7b59824ae3a2517da1447e728d",
+      "Id": "942db6c1b9784c92a6e60d17975b9d9d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "df876cd0fa214261b45653b912141675",
+      "End": "6fedefd540254d3e8608e9c5526bd46f",
+      "Id": "14661eaa07d04a1f9f5569764929a5db",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "6f3edfcb1ffd4b49817eee7c39ecd251",
+      "End": "cad71c01be2445088bb2e2ca6a4db69d",
+      "Id": "9ff0f889d0224dbe873b558a9deeae3b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "6f3edfcb1ffd4b49817eee7c39ecd251",
+      "End": "ff7dcd8325e448e48d5c2471463e59ee",
+      "Id": "c1feadd7674b4dcbbfcae6927cde79e1",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "6f3edfcb1ffd4b49817eee7c39ecd251",
+      "End": "555b263bc2ea4af1af153271a5b80d22",
+      "Id": "3afb5405cbdd4057bd33e1c80cc5b5d4",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "f8c5c2f094004bc097911df1e5b30819",
+      "End": "02bd980acd934fdf80704643c177e7ee",
+      "Id": "13cb28222e384f43a165c40877655c73",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [],
+  "NodeLibraryDependencies": [
+    {
+      "Name": "output.csv",
+      "ReferenceType": "External",
+      "Nodes": [
+        "4309d1385d3f4344ade418843116b306"
+      ]
+    }
+  ],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "特性",
+      "Version": "2.17",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "4.0",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "None",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [
+    {
+      "NodeId": "dfb2c2cb-0770-42d9-9526-490ba573beeb",
+      "Binding": {
+        "ByPoints_InClassDecl-1_InFunctionScope-1_Instance0_dfb2c2cb-0770-42d9-9526-490ba573beeb": "PFNPQVAtRU5WOkVudmVsb3BlIHhtbG5zOnhzaT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEtaW5zdGFuY2UiIHhtbG5zOnhzZD0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEiIHhtbG5zOlNPQVAtRU5DPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy9zb2FwL2VuY29kaW5nLyIgeG1sbnM6U09BUC1FTlY9Imh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3NvYXAvZW52ZWxvcGUvIiB4bWxuczpjbHI9Imh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vc29hcC9lbmNvZGluZy9jbHIvMS4wIiBTT0FQLUVOVjplbmNvZGluZ1N0eWxlPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy9zb2FwL2VuY29kaW5nLyI+DQo8U09BUC1FTlY6Qm9keT4NCjxhMTpDYWxsU2l0ZV94MDAyQl9UcmFjZVNlcmlhbGlzZXJIZWxwZXIgaWQ9InJlZi0xIiB4bWxuczphMT0iaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS9jbHIvbnNhc3NlbS9Qcm90b0NvcmUvUHJvdG9Db3JlJTJDJTIwVmVyc2lvbiUzRDIuMTcuMC4zNDcyJTJDJTIwQ3VsdHVyZSUzRG5ldXRyYWwlMkMlMjBQdWJsaWNLZXlUb2tlbiUzRG51bGwiPg0KPE51bWJlck9mRWxlbWVudHM+MTwvTnVtYmVyT2ZFbGVtZW50cz4NCjxCYXNlLTBfSGFzRGF0YT50cnVlPC9CYXNlLTBfSGFzRGF0YT4NCjxCYXNlLTBfRGF0YSBpZD0icmVmLTMiPlBGTlBRVkF0UlU1V09rVnVkbVZzYjNCbElIaHRiRzV6T25oemFUMGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TVM5WVRVeFRZMmhsYldFdGFXNXpkR0Z1WTJVaUlIaHRiRzV6T25oelpEMGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TVM5WVRVeFRZMmhsYldFaUlIaHRiRzV6T2xOUFFWQXRSVTVEUFNKb2RIUndPaTh2YzJOb1pXMWhjeTU0Yld4emIyRndMbTl5Wnk5emIyRndMMlZ1WTI5a2FXNW5MeUlnZUcxc2JuTTZVMDlCVUMxRlRsWTlJbWgwZEhBNkx5OXpZMmhsYldGekxuaHRiSE52WVhBdWIzSm5MM052WVhBdlpXNTJaV3h2Y0dVdklpQjRiV3h1Y3pwamJISTlJbWgwZEhBNkx5OXpZMmhsYldGekxtMXBZM0p2YzI5bWRDNWpiMjB2YzI5aGNDOWxibU52WkdsdVp5OWpiSEl2TVM0d0lpQlRUMEZRTFVWT1ZqcGxibU52WkdsdVoxTjBlV3hsUFNKb2RIUndPaTh2YzJOb1pXMWhjeTU0Yld4emIyRndMbTl5Wnk5emIyRndMMlZ1WTI5a2FXNW5MeUkrRFFvOFUwOUJVQzFGVGxZNlFtOWtlVDROQ2p4aE1UcE5kV3gwYVhCc1pWTmxjbWxoYkdsNllXSnNaVWxrSUdsa1BTSnlaV1l0TVNJZ2VHMXNibk02WVRFOUltaDBkSEE2THk5elkyaGxiV0Z6TG0xcFkzSnZjMjltZEM1amIyMHZZMnh5TDI1ellYTnpaVzB2VW1WMmFYUlRaWEoyYVdObGN5NVFaWEp6YVhOMFpXNWpaUzlTWlhacGRGTmxjblpwWTJWekpUSkRKVEl3Vm1WeWMybHZiaVV6UkRJdU1UY3VNQzQzTkRBMEpUSkRKVEl3UTNWc2RIVnlaU1V6Ukc1bGRYUnlZV3dsTWtNbE1qQlFkV0pzYVdOTFpYbFViMnRsYmlVelJHNTFiR3dpUGcwS1BHNTFiV0psY2s5bVJXeGxiV1Z1ZEhNK056YzhMMjUxYldKbGNrOW1SV3hsYldWdWRITStEUW84YzNSeWFXNW5TVVF0TUNCcFpEMGljbVZtTFRNaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpBMk56d3ZjM1J5YVc1blNVUXRNRDROQ2p4cGJuUkpSQzB3UGpNeU16WTROend2YVc1MFNVUXRNRDROQ2p4emRISnBibWRKUkMweElHbGtQU0p5WldZdE5DSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU1EYzRQQzl6ZEhKcGJtZEpSQzB4UGcwS1BHbHVkRWxFTFRFK016SXpOekEwUEM5cGJuUkpSQzB4UGcwS1BITjBjbWx1WjBsRUxUSWdhV1E5SW5KbFppMDFJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWXdPR0U4TDNOMGNtbHVaMGxFTFRJK0RRbzhhVzUwU1VRdE1qNHpNak0zTWpJOEwybHVkRWxFTFRJK0RRbzhjM1J5YVc1blNVUXRNeUJwWkQwaWNtVm1MVFlpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaakE1WXp3dmMzUnlhVzVuU1VRdE16NE5DanhwYm5SSlJDMHpQak15TXpjME1Ed3ZhVzUwU1VRdE16NE5Danh6ZEhKcGJtZEpSQzAwSUdsa1BTSnlaV1l0TnlJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTUdGbFBDOXpkSEpwYm1kSlJDMDBQZzBLUEdsdWRFbEVMVFErTXpJek56VTRQQzlwYm5SSlJDMDBQZzBLUEhOMGNtbHVaMGxFTFRVZ2FXUTlJbkpsWmkwNElqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZd1l6QThMM04wY21sdVowbEVMVFUrRFFvOGFXNTBTVVF0TlQ0ek1qTTNOelk4TDJsdWRFbEVMVFUrRFFvOGMzUnlhVzVuU1VRdE5pQnBaRDBpY21WbUxUa2lQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqQmtNand2YzNSeWFXNW5TVVF0Tmo0TkNqeHBiblJKUkMwMlBqTXlNemM1TkR3dmFXNTBTVVF0Tmo0TkNqeHpkSEpwYm1kSlJDMDNJR2xrUFNKeVpXWXRNVEFpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaakJsTkR3dmMzUnlhVzVuU1VRdE56NE5DanhwYm5SSlJDMDNQak15TXpneE1qd3ZhVzUwU1VRdE56NE5Danh6ZEhKcGJtZEpSQzA0SUdsa1BTSnlaV1l0TVRFaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpCbU5qd3ZjM1J5YVc1blNVUXRPRDROQ2p4cGJuUkpSQzA0UGpNeU16Z3pNRHd2YVc1MFNVUXRPRDROQ2p4emRISnBibWRKUkMwNUlHbGtQU0p5WldZdE1USWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqRXdPRHd2YzNSeWFXNW5TVVF0T1Q0TkNqeHBiblJKUkMwNVBqTXlNemcwT0R3dmFXNTBTVVF0T1Q0TkNqeHpkSEpwYm1kSlJDMHhNQ0JwWkQwaWNtVm1MVEV6SWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1l4TVdFOEwzTjBjbWx1WjBsRUxURXdQZzBLUEdsdWRFbEVMVEV3UGpNeU16ZzJOand2YVc1MFNVUXRNVEErRFFvOGMzUnlhVzVuU1VRdE1URWdhV1E5SW5KbFppMHhOQ0krTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1NVEpqUEM5emRISnBibWRKUkMweE1UNE5DanhwYm5SSlJDMHhNVDR6TWpNNE9EUThMMmx1ZEVsRUxURXhQZzBLUEhOMGNtbHVaMGxFTFRFeUlHbGtQU0p5WldZdE1UVWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqRXpaVHd2YzNSeWFXNW5TVVF0TVRJK0RRbzhhVzUwU1VRdE1USStNekl6T1RBeVBDOXBiblJKUkMweE1qNE5Danh6ZEhKcGJtZEpSQzB4TXlCcFpEMGljbVZtTFRFMklqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZeE5UQThMM04wY21sdVowbEVMVEV6UGcwS1BHbHVkRWxFTFRFelBqTXlNemt5TUR3dmFXNTBTVVF0TVRNK0RRbzhjM1J5YVc1blNVUXRNVFFnYVdROUluSmxaaTB4TnlJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTVRZeVBDOXpkSEpwYm1kSlJDMHhORDROQ2p4cGJuUkpSQzB4TkQ0ek1qTTVNemc4TDJsdWRFbEVMVEUwUGcwS1BITjBjbWx1WjBsRUxURTFJR2xrUFNKeVpXWXRNVGdpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaakUzTkR3dmMzUnlhVzVuU1VRdE1UVStEUW84YVc1MFNVUXRNVFUrTXpJek9UVTJQQzlwYm5SSlJDMHhOVDROQ2p4emRISnBibWRKUkMweE5pQnBaRDBpY21WbUxURTVJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWXhPRFk4TDNOMGNtbHVaMGxFTFRFMlBnMEtQR2x1ZEVsRUxURTJQak15TXprM05Ed3ZhVzUwU1VRdE1UWStEUW84YzNSeWFXNW5TVVF0TVRjZ2FXUTlJbkpsWmkweU1DSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU1UazRQQzl6ZEhKcGJtZEpSQzB4Tno0TkNqeHBiblJKUkMweE56NHpNak01T1RJOEwybHVkRWxFTFRFM1BnMEtQSE4wY21sdVowbEVMVEU0SUdsa1BTSnlaV1l0TWpFaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpGaFlUd3ZjM1J5YVc1blNVUXRNVGcrRFFvOGFXNTBTVVF0TVRnK016STBNREV3UEM5cGJuUkpSQzB4T0Q0TkNqeHpkSEpwYm1kSlJDMHhPU0JwWkQwaWNtVm1MVEl5SWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1l4WW1NOEwzTjBjbWx1WjBsRUxURTVQZzBLUEdsdWRFbEVMVEU1UGpNeU5EQXlPRHd2YVc1MFNVUXRNVGsrRFFvOGMzUnlhVzVuU1VRdE1qQWdhV1E5SW5KbFppMHlNeUkrTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1NV05sUEM5emRISnBibWRKUkMweU1ENE5DanhwYm5SSlJDMHlNRDR6TWpRd05EWThMMmx1ZEVsRUxUSXdQZzBLUEhOMGNtbHVaMGxFTFRJeElHbGtQU0p5WldZdE1qUWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqRmxNRHd2YzNSeWFXNW5TVVF0TWpFK0RRbzhhVzUwU1VRdE1qRStNekkwTURZMFBDOXBiblJKUkMweU1UNE5Danh6ZEhKcGJtZEpSQzB5TWlCcFpEMGljbVZtTFRJMUlqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZeFpqSThMM04wY21sdVowbEVMVEl5UGcwS1BHbHVkRWxFTFRJeVBqTXlOREE0TWp3dmFXNTBTVVF0TWpJK0RRbzhjM1J5YVc1blNVUXRNak1nYVdROUluSmxaaTB5TmlJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTWpBMFBDOXpkSEpwYm1kSlJDMHlNejROQ2p4cGJuUkpSQzB5TXo0ek1qUXhNREE4TDJsdWRFbEVMVEl6UGcwS1BITjBjbWx1WjBsRUxUSTBJR2xrUFNKeVpXWXRNamNpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaakl4Tmp3dmMzUnlhVzVuU1VRdE1qUStEUW84YVc1MFNVUXRNalErTXpJME1URTRQQzlwYm5SSlJDMHlORDROQ2p4emRISnBibWRKUkMweU5TQnBaRDBpY21WbUxUSTRJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWXlNamc4TDNOMGNtbHVaMGxFTFRJMVBnMEtQR2x1ZEVsRUxUSTFQak15TkRFek5qd3ZhVzUwU1VRdE1qVStEUW84YzNSeWFXNW5TVVF0TWpZZ2FXUTlJbkpsWmkweU9TSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU1qTmhQQzl6ZEhKcGJtZEpSQzB5Tmo0TkNqeHBiblJKUkMweU5qNHpNalF4TlRROEwybHVkRWxFTFRJMlBnMEtQSE4wY21sdVowbEVMVEkzSUdsa1BTSnlaV1l0TXpBaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpJMFl6d3ZjM1J5YVc1blNVUXRNamMrRFFvOGFXNTBTVVF0TWpjK016STBNVGN5UEM5cGJuUkpSQzB5Tno0TkNqeHpkSEpwYm1kSlJDMHlPQ0JwWkQwaWNtVm1MVE14SWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1l5TldVOEwzTjBjbWx1WjBsRUxUSTRQZzBLUEdsdWRFbEVMVEk0UGpNeU5ERTVNRHd2YVc1MFNVUXRNamcrRFFvOGMzUnlhVzVuU1VRdE1qa2dhV1E5SW5KbFppMHpNaUkrTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1NamN3UEM5emRISnBibWRKUkMweU9UNE5DanhwYm5SSlJDMHlPVDR6TWpReU1EZzhMMmx1ZEVsRUxUSTVQZzBLUEhOMGNtbHVaMGxFTFRNd0lHbGtQU0p5WldZdE16TWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqSTRNand2YzNSeWFXNW5TVVF0TXpBK0RRbzhhVzUwU1VRdE16QStNekkwTWpJMlBDOXBiblJKUkMwek1ENE5Danh6ZEhKcGJtZEpSQzB6TVNCcFpEMGljbVZtTFRNMElqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZeU9UUThMM04wY21sdVowbEVMVE14UGcwS1BHbHVkRWxFTFRNeFBqTXlOREkwTkR3dmFXNTBTVVF0TXpFK0RRbzhjM1J5YVc1blNVUXRNeklnYVdROUluSmxaaTB6TlNJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTW1FMlBDOXpkSEpwYm1kSlJDMHpNajROQ2p4cGJuUkpSQzB6TWo0ek1qUXlOakk4TDJsdWRFbEVMVE15UGcwS1BITjBjbWx1WjBsRUxUTXpJR2xrUFNKeVpXWXRNellpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaakppT0R3dmMzUnlhVzVuU1VRdE16TStEUW84YVc1MFNVUXRNek0rTXpJME1qZ3dQQzlwYm5SSlJDMHpNejROQ2p4emRISnBibWRKUkMwek5DQnBaRDBpY21WbUxUTTNJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWXlZMkU4TDNOMGNtbHVaMGxFTFRNMFBnMEtQR2x1ZEVsRUxUTTBQak15TkRJNU9Ed3ZhVzUwU1VRdE16UStEUW84YzNSeWFXNW5TVVF0TXpVZ2FXUTlJbkpsWmkwek9DSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU1tUmpQQzl6ZEhKcGJtZEpSQzB6TlQ0TkNqeHBiblJKUkMwek5UNHpNalF6TVRZOEwybHVkRWxFTFRNMVBnMEtQSE4wY21sdVowbEVMVE0ySUdsa1BTSnlaV1l0TXpraVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpKbFpUd3ZjM1J5YVc1blNVUXRNelkrRFFvOGFXNTBTVVF0TXpZK016STBNek0wUEM5cGJuUkpSQzB6Tmo0TkNqeHpkSEpwYm1kSlJDMHpOeUJwWkQwaWNtVm1MVFF3SWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1l6TURBOEwzTjBjbWx1WjBsRUxUTTNQZzBLUEdsdWRFbEVMVE0zUGpNeU5ETTFNand2YVc1MFNVUXRNemMrRFFvOGMzUnlhVzVuU1VRdE16Z2dhV1E5SW5KbFppMDBNU0krTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1NekV5UEM5emRISnBibWRKUkMwek9ENE5DanhwYm5SSlJDMHpPRDR6TWpRek56QThMMmx1ZEVsRUxUTTRQZzBLUEhOMGNtbHVaMGxFTFRNNUlHbGtQU0p5WldZdE5ESWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqTXlORHd2YzNSeWFXNW5TVVF0TXprK0RRbzhhVzUwU1VRdE16aytNekkwTXpnNFBDOXBiblJKUkMwek9UNE5Danh6ZEhKcGJtZEpSQzAwTUNCcFpEMGljbVZtTFRReklqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZek16WThMM04wY21sdVowbEVMVFF3UGcwS1BHbHVkRWxFTFRRd1BqTXlORFF3Tmp3dmFXNTBTVVF0TkRBK0RRbzhjM1J5YVc1blNVUXROREVnYVdROUluSmxaaTAwTkNJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTXpRNFBDOXpkSEpwYm1kSlJDMDBNVDROQ2p4cGJuUkpSQzAwTVQ0ek1qUTBNalE4TDJsdWRFbEVMVFF4UGcwS1BITjBjbWx1WjBsRUxUUXlJR2xrUFNKeVpXWXRORFVpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaak0xWVR3dmMzUnlhVzVuU1VRdE5ESStEUW84YVc1MFNVUXROREkrTXpJME5EUXlQQzlwYm5SSlJDMDBNajROQ2p4emRISnBibWRKUkMwME15QnBaRDBpY21WbUxUUTJJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWXpObU04TDNOMGNtbHVaMGxFTFRRelBnMEtQR2x1ZEVsRUxUUXpQak15TkRRMk1Ed3ZhVzUwU1VRdE5ETStEUW84YzNSeWFXNW5TVVF0TkRRZ2FXUTlJbkpsWmkwME55SStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU16ZGxQQzl6ZEhKcGJtZEpSQzAwTkQ0TkNqeHBiblJKUkMwME5ENHpNalEwTnpnOEwybHVkRWxFTFRRMFBnMEtQSE4wY21sdVowbEVMVFExSUdsa1BTSnlaV1l0TkRnaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpNNU1Ed3ZjM1J5YVc1blNVUXRORFUrRFFvOGFXNTBTVVF0TkRVK016STBORGsyUEM5cGJuUkpSQzAwTlQ0TkNqeHpkSEpwYm1kSlJDMDBOaUJwWkQwaWNtVm1MVFE1SWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1l6WVRJOEwzTjBjbWx1WjBsRUxUUTJQZzBLUEdsdWRFbEVMVFEyUGpNeU5EVXhORHd2YVc1MFNVUXRORFkrRFFvOGMzUnlhVzVuU1VRdE5EY2dhV1E5SW5KbFppMDFNQ0krTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1NMkkwUEM5emRISnBibWRKUkMwME56NE5DanhwYm5SSlJDMDBOejR6TWpRMU16SThMMmx1ZEVsRUxUUTNQZzBLUEhOMGNtbHVaMGxFTFRRNElHbGtQU0p5WldZdE5URWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqTmpOand2YzNSeWFXNW5TVVF0TkRnK0RRbzhhVzUwU1VRdE5EZytNekkwTlRVd1BDOXBiblJKUkMwME9ENE5Danh6ZEhKcGJtZEpSQzAwT1NCcFpEMGljbVZtTFRVeUlqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZelpEZzhMM04wY21sdVowbEVMVFE1UGcwS1BHbHVkRWxFTFRRNVBqTXlORFUyT0R3dmFXNTBTVVF0TkRrK0RRbzhjM1J5YVc1blNVUXROVEFnYVdROUluSmxaaTAxTXlJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTTJWaFBDOXpkSEpwYm1kSlJDMDFNRDROQ2p4cGJuUkpSQzAxTUQ0ek1qUTFPRFk4TDJsdWRFbEVMVFV3UGcwS1BITjBjbWx1WjBsRUxUVXhJR2xrUFNKeVpXWXROVFFpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaak5tWXp3dmMzUnlhVzVuU1VRdE5URStEUW84YVc1MFNVUXROVEUrTXpJME5qQTBQQzlwYm5SSlJDMDFNVDROQ2p4emRISnBibWRKUkMwMU1pQnBaRDBpY21WbUxUVTFJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWTBNR1U4TDNOMGNtbHVaMGxFTFRVeVBnMEtQR2x1ZEVsRUxUVXlQak15TkRZeU1qd3ZhVzUwU1VRdE5USStEUW84YzNSeWFXNW5TVVF0TlRNZ2FXUTlJbkpsWmkwMU5pSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU5ESXdQQzl6ZEhKcGJtZEpSQzAxTXo0TkNqeHBiblJKUkMwMU16NHpNalEyTkRBOEwybHVkRWxFTFRVelBnMEtQSE4wY21sdVowbEVMVFUwSUdsa1BTSnlaV1l0TlRjaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpRek1qd3ZjM1J5YVc1blNVUXROVFErRFFvOGFXNTBTVVF0TlRRK016STBOalU0UEM5cGJuUkpSQzAxTkQ0TkNqeHpkSEpwYm1kSlJDMDFOU0JwWkQwaWNtVm1MVFU0SWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1kwTkRROEwzTjBjbWx1WjBsRUxUVTFQZzBLUEdsdWRFbEVMVFUxUGpNeU5EWTNOand2YVc1MFNVUXROVFUrRFFvOGMzUnlhVzVuU1VRdE5UWWdhV1E5SW5KbFppMDFPU0krTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1ORFUyUEM5emRISnBibWRKUkMwMU5qNE5DanhwYm5SSlJDMDFOajR6TWpRMk9UUThMMmx1ZEVsRUxUVTJQZzBLUEhOMGNtbHVaMGxFTFRVM0lHbGtQU0p5WldZdE5qQWlQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqUTJPRHd2YzNSeWFXNW5TVVF0TlRjK0RRbzhhVzUwU1VRdE5UYytNekkwTnpFeVBDOXBiblJKUkMwMU56NE5Danh6ZEhKcGJtZEpSQzAxT0NCcFpEMGljbVZtTFRZeElqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZME4yRThMM04wY21sdVowbEVMVFU0UGcwS1BHbHVkRWxFTFRVNFBqTXlORGN6TUR3dmFXNTBTVVF0TlRnK0RRbzhjM1J5YVc1blNVUXROVGtnYVdROUluSmxaaTAyTWlJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTkRoalBDOXpkSEpwYm1kSlJDMDFPVDROQ2p4cGJuUkpSQzAxT1Q0ek1qUTNORGc4TDJsdWRFbEVMVFU1UGcwS1BITjBjbWx1WjBsRUxUWXdJR2xrUFNKeVpXWXROak1pUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaalE1WlR3dmMzUnlhVzVuU1VRdE5qQStEUW84YVc1MFNVUXROakErTXpJME56WTJQQzlwYm5SSlJDMDJNRDROQ2p4emRISnBibWRKUkMwMk1TQnBaRDBpY21WbUxUWTBJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWTBZakE4TDNOMGNtbHVaMGxFTFRZeFBnMEtQR2x1ZEVsRUxUWXhQak15TkRjNE5Ed3ZhVzUwU1VRdE5qRStEUW84YzNSeWFXNW5TVVF0TmpJZ2FXUTlJbkpsWmkwMk5TSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU5HTXlQQzl6ZEhKcGJtZEpSQzAyTWo0TkNqeHBiblJKUkMwMk1qNHpNalE0TURJOEwybHVkRWxFTFRZeVBnMEtQSE4wY21sdVowbEVMVFl6SUdsa1BTSnlaV1l0TmpZaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpSa05Ed3ZjM1J5YVc1blNVUXROak0rRFFvOGFXNTBTVVF0TmpNK016STBPREl3UEM5cGJuUkpSQzAyTXo0TkNqeHpkSEpwYm1kSlJDMDJOQ0JwWkQwaWNtVm1MVFkzSWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1kwWlRZOEwzTjBjbWx1WjBsRUxUWTBQZzBLUEdsdWRFbEVMVFkwUGpNeU5EZ3pPRHd2YVc1MFNVUXROalErRFFvOGMzUnlhVzVuU1VRdE5qVWdhV1E5SW5KbFppMDJPQ0krTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1OR1k0UEM5emRISnBibWRKUkMwMk5UNE5DanhwYm5SSlJDMDJOVDR6TWpRNE5UWThMMmx1ZEVsRUxUWTFQZzBLUEhOMGNtbHVaMGxFTFRZMklHbGtQU0p5WldZdE5qa2lQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqVXdZVHd2YzNSeWFXNW5TVVF0TmpZK0RRbzhhVzUwU1VRdE5qWStNekkwT0RjMFBDOXBiblJKUkMwMk5qNE5Danh6ZEhKcGJtZEpSQzAyTnlCcFpEMGljbVZtTFRjd0lqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZMU1XTThMM04wY21sdVowbEVMVFkzUGcwS1BHbHVkRWxFTFRZM1BqTXlORGc1TWp3dmFXNTBTVVF0TmpjK0RRbzhjM1J5YVc1blNVUXROamdnYVdROUluSmxaaTAzTVNJK01UWmxPVGhrTW1VdE0yUTFZUzAwWldJeExXSXpaR010T0RjMU56ZzJNV1k0TWpNd0xUQXdNRFJtTlRKbFBDOXpkSEpwYm1kSlJDMDJPRDROQ2p4cGJuUkpSQzAyT0Q0ek1qUTVNVEE4TDJsdWRFbEVMVFk0UGcwS1BITjBjbWx1WjBsRUxUWTVJR2xrUFNKeVpXWXROeklpUGpFMlpUazRaREpsTFROa05XRXROR1ZpTVMxaU0yUmpMVGczTlRjNE5qRm1PREl6TUMwd01EQTBaalUwTUR3dmMzUnlhVzVuU1VRdE5qaytEUW84YVc1MFNVUXROamsrTXpJME9USTRQQzlwYm5SSlJDMDJPVDROQ2p4emRISnBibWRKUkMwM01DQnBaRDBpY21WbUxUY3pJajR4Tm1VNU9HUXlaUzB6WkRWaExUUmxZakV0WWpOa1l5MDROelUzT0RZeFpqZ3lNekF0TURBd05HWTFOVEk4TDNOMGNtbHVaMGxFTFRjd1BnMEtQR2x1ZEVsRUxUY3dQak15TkRrME5qd3ZhVzUwU1VRdE56QStEUW84YzNSeWFXNW5TVVF0TnpFZ2FXUTlJbkpsWmkwM05DSStNVFpsT1Roa01tVXRNMlExWVMwMFpXSXhMV0l6WkdNdE9EYzFOemcyTVdZNE1qTXdMVEF3TURSbU5UWTBQQzl6ZEhKcGJtZEpSQzAzTVQ0TkNqeHBiblJKUkMwM01UNHpNalE1TmpROEwybHVkRWxFTFRjeFBnMEtQSE4wY21sdVowbEVMVGN5SUdsa1BTSnlaV1l0TnpVaVBqRTJaVGs0WkRKbExUTmtOV0V0TkdWaU1TMWlNMlJqTFRnM05UYzROakZtT0RJek1DMHdNREEwWmpVM05qd3ZjM1J5YVc1blNVUXROekkrRFFvOGFXNTBTVVF0TnpJK016STBPVGd5UEM5cGJuUkpSQzAzTWo0TkNqeHpkSEpwYm1kSlJDMDNNeUJwWkQwaWNtVm1MVGMySWo0eE5tVTVPR1F5WlMwelpEVmhMVFJsWWpFdFlqTmtZeTA0TnpVM09EWXhaamd5TXpBdE1EQXdOR1kxT0RnOEwzTjBjbWx1WjBsRUxUY3pQZzBLUEdsdWRFbEVMVGN6UGpNeU5UQXdNRHd2YVc1MFNVUXROek0rRFFvOGMzUnlhVzVuU1VRdE56UWdhV1E5SW5KbFppMDNOeUkrTVRabE9UaGtNbVV0TTJRMVlTMDBaV0l4TFdJelpHTXRPRGMxTnpnMk1XWTRNak13TFRBd01EUm1OVGxoUEM5emRISnBibWRKUkMwM05ENE5DanhwYm5SSlJDMDNORDR6TWpVd01UZzhMMmx1ZEVsRUxUYzBQZzBLUEhOMGNtbHVaMGxFTFRjMUlHbGtQU0p5WldZdE56Z2lQakUyWlRrNFpESmxMVE5rTldFdE5HVmlNUzFpTTJSakxUZzNOVGM0TmpGbU9ESXpNQzB3TURBMFpqVmhZend2YzNSeWFXNW5TVVF0TnpVK0RRbzhhVzUwU1VRdE56VStNekkxTURNMlBDOXBiblJKUkMwM05UNE5Danh6ZEhKcGJtZEpSQzAzTmlCcFpEMGljbVZtTFRjNUlqNHhObVU1T0dReVpTMHpaRFZoTFRSbFlqRXRZak5rWXkwNE56VTNPRFl4WmpneU16QXRNREF3TkdZMVltVThMM04wY21sdVowbEVMVGMyUGcwS1BHbHVkRWxFTFRjMlBqTXlOVEExTkR3dmFXNTBTVVF0TnpZK0RRbzhMMkV4T2sxMWJIUnBjR3hsVTJWeWFXRnNhWHBoWW14bFNXUStEUW84TDFOUFFWQXRSVTVXT2tKdlpIaytEUW84TDFOUFFWQXRSVTVXT2tWdWRtVnNiM0JsUGcwSzwvQmFzZS0wX0RhdGE+DQo8QmFzZS0wX0hhc05lc3RlZERhdGE+ZmFsc2U8L0Jhc2UtMF9IYXNOZXN0ZWREYXRhPg0KPC9hMTpDYWxsU2l0ZV94MDAyQl9UcmFjZVNlcmlhbGlzZXJIZWxwZXI+DQo8L1NPQVAtRU5WOkJvZHk+DQo8L1NPQVAtRU5WOkVudmVsb3BlPg0K"
+      }
+    }
+  ],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 100.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.17.0.3472",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "_Background Preview",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "def7d4fb60bd4d00921b1888c3327baa",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1555.5307859108525,
+        "Y": 460.01945989558675
+      },
+      {
+        "Name": "AdaptiveComponent.ByPoints",
+        "ShowGeometry": true,
+        "Id": "dfb2c2cb077042d99526490ba573beeb",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1935.3182069821323,
+        "Y": 459.95146731664477
+      },
+      {
+        "Name": "Point.ByCoordinates",
+        "ShowGeometry": true,
+        "Id": "441e145cccc3416a9a4d41284840d48e",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1203.8585516240823,
+        "Y": 462.87492800993175
+      },
+      {
+        "Name": "File Path",
+        "ShowGeometry": true,
+        "Id": "4309d1385d3f4344ade418843116b306",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 382.96360048748352,
+        "Y": 517.27509003217767
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "58ece8882f8e40daab28aff39a690e4b",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 937.56453986866245,
+        "Y": 479.87156702152475
+      },
+      {
+        "Name": "Data.ImportCSV",
+        "ShowGeometry": true,
+        "Id": "e8aa411b6ec848bf88f8160095e13d10",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 578.52279388620059,
+        "Y": 517.40587072592587
+      },
+      {
+        "Name": "Family Types",
+        "ShowGeometry": true,
+        "Id": "62f757ef7bef46cd89d9800639970936",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1544.6631775081491,
+        "Y": 621.32766649475354
+      }
+    ],
+    "Annotations": [],
+    "X": -1127.7697875412255,
+    "Y": -144.70706477566512,
+    "Zoom": 0.89416808331207664
+  }
+}

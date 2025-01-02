@@ -2,3 +2,7 @@ This repo is for "BIM for mining - Automated generation of information models us
 
 The present study aims to explore the characteristics and adoption potential of BIM technology in the mining sector, and focuses on the generation of a Mine Information Model (MIM) from raw mine data, addressing a critical gap in the current state of digital transformation in the mining industry. We designed a fully automated workflow to generate parametric models of as-excavated underground tunnels and geological block models for mining, utilizing analytical data from surrounding rock formations. Two case studies utilizing real mine tunnel data from Finland were conducted to validate the proposed automated MIM generation workflow. The input raw data includes reality-captured raw data, such as point clouds or mesh models of tunnels, borehole information, and associated design files. Through the application of topology-based parametric objects and script-driven rules, MIMs can be effectively created for mining operations.
 
+In this paper, we provide two cases, UG1 is the automatic reconstruction of mine tunnels from point clouds, and UG2 is the automatic reconstruction of mine tunnels from mesh models and surrounding rock models from borehole data. Here we provide the Dynamo script for automatic reconstruction (including Python execution scripts inside) and the required adaptive family.
+
+
+

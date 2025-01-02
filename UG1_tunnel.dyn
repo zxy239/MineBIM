@@ -1,0 +1,760 @@
+{
+  "Uuid": "b8526da9-9840-4b4e-babf-f1186bed8bd8",
+  "IsCustomNode": false,
+  "Description": "",
+  "Name": "ug1",
+  "ElementResolver": {
+    "ResolutionMap": {
+      "DSOffice.Data": {
+        "Key": "DSOffice.Data",
+        "Value": "DSOffice.dll"
+      },
+      "Point": {
+        "Key": "Autodesk.DesignScript.Geometry.Point",
+        "Value": "ProtoGeometry.dll"
+      },
+      "List": {
+        "Key": "List",
+        "Value": "BuiltIn.ds"
+      },
+      "String": {
+        "Key": "DSCore.String",
+        "Value": "DSCoreNodes.dll"
+      }
+    }
+  },
+  "Inputs": [],
+  "Outputs": [],
+  "Nodes": [
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "HintPath": "D:\\PhdData\\MiningBIM\\UG1\\Revit\\mesh_test.csv",
+      "InputValue": ".\\mesh_test.csv",
+      "NodeType": "ExtensionNode",
+      "Id": "645dc97f13ff42bd8a5db9ec5ed27528",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "c8d71c326f6d405992712b2665979591",
+          "Name": "",
+          "Description": "文件路径",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "允许选择系统上某个文件以返回其文件路径"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "# Import the required modules\r\nimport sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\nsys.path.append(r'D:\\Anaconda\\envs\\Dynamo3912\\Lib\\site-packages')\r\nimport open3d as o3d\r\nimport numpy as np\r\nimport pandas as pd\r\nfrom scipy.interpolate import CubicSpline\r\nimport math\r\n\r\nmeshsample = o3d.io.read_triangle_mesh(IN[0])\r\nDesignWidth = 5500\r\nDesignHeight = 4500\r\n\r\ndf = pd.read_csv(IN[1])\r\ndf[[\"x\", \"y\", \"z\"]] = df[[\"x\", \"y\", \"z\"]] * 1000\r\ngroupedcp = df.groupby('no').apply(lambda x: x[['x', 'y', 'z']].to_numpy())\r\n\r\ndef plane_param(point, n1):\r\n    A = n1[0]\r\n    B = n1[1]\r\n    C = n1[2]\r\n    D = -A * point[0] - B * point[1] - C * point[2]\r\n    return A, B, C, D\r\n\r\ndef calculate_local_contour(mesh_vertices, mesh_triangles, center_point, normal_vector, distance):\r\n    contour_vertices = []\r\n    center_point = center_point+(0,0,distance/2)   \r\n    min_x = center_point[0] - distance\r\n    max_x = center_point[0] + distance\r\n    min_y = center_point[1] - distance\r\n    max_y = center_point[1] + distance\r\n    min_z = center_point[2] - distance\r\n    max_z = center_point[2] + distance   \r\n    for triangle in mesh_triangles:\r\n        vertex_indices = triangle[:3]\r\n        vertices = mesh_vertices[vertex_indices]       \r\n        if any((min_x <= vertex[0] <= max_x and\r\n                min_y <= vertex[1] <= max_y and\r\n                min_z <= vertex[2] <= max_z) for vertex in vertices):           \r\n            intersections = []\r\n            for i in range(3):\r\n                start_vertex = vertices[i]\r\n                end_vertex = vertices[(i + 1) % 3]\r\n                start_distance = np.dot(start_vertex - center_point, normal_vector)\r\n                end_distance = np.dot(end_vertex - center_point, normal_vector)\r\n                if start_distance * end_distance < 0:\r\n                    t = abs(start_distance) / (abs(start_distance) + abs(end_distance))\r\n                    intersection = start_vertex + t * (end_vertex - start_vertex)\r\n                    intersections.append(intersection)           \r\n            if len(intersections) >= 2:\r\n                contour_vertices.extend(intersections)  \r\n    return np.array(contour_vertices)\r\n\r\ndef project_to_plane(point_cloud, center, normal):\r\n    point_cloud = np.array(point_cloud) - np.array(center)\r\n    projection = np.dot(point_cloud, normal)\r\n    projected_points = point_cloud - np.outer(projection, normal)\r\n    x_axis = np.array([-normal[1], normal[0], 0])\r\n    x_axis = x_axis/np.linalg.norm(x_axis)\r\n    y_axis = np.cross(normal, x_axis)\r\n    x_coords = np.dot(projected_points, x_axis)\r\n    y_coords = np.dot(projected_points, y_axis)\r\n    return np.array(list(zip(x_coords, y_coords)))\r\n\r\ndef get_3dcoordinates_from_plane(point2d,plane_params,origin):\r\n    xp,yp = point2d\r\n    A,B,C,D = plane_params\r\n    x0,y0,z0 = origin\r\n    N = np.array([A, B, C])\r\n    N = N / np.linalg.norm(N)\r\n    \r\n    Vx = -B\r\n    Vy = A\r\n    Vz = 0\r\n    V = np.array([Vx, Vy, Vz])\r\n    V = V / np.linalg.norm(V)\r\n    \r\n    U = np.cross(N, V)\r\n    U = U / np.linalg.norm(U)\r\n    \r\n    x = x0+xp*V[0]+yp*U[0]\r\n    y = y0+xp*V[1]+yp*U[1]\r\n    z = z0+xp*V[2]+yp*U[2]\r\n    \r\n    return [x,y,z]\r\n\r\ndef chunk_list(points):\r\n    chunked_list = []\r\n    num_chunks = math.ceil((len(points)-4)/8)\r\n    for i in range(num_chunks):\r\n        start_index = i*8\r\n        end_index = (i+1)*8 + 4\r\n        current_chunk = points[start_index:end_index]\r\n        chunked_list.append(current_chunk)\r\n\r\n    return chunked_list\r\n\r\nada_points_3d = []\r\nnum = df['no'].nunique()\r\nMeshVertices = np.asarray(meshsample.vertices)*1000\r\nMeshTriangles = np.asarray(meshsample.triangles)\r\n\r\nfor k in range(num):\r\n    cp = groupedcp.values[k]\r\n    count = cp.shape[0]\r\n    \r\n    # Compute a cubic spline curve\r\n    t = range(count)\r\n    cs = CubicSpline(t, cp, bc_type='natural')\r\n\r\n    # Compute the tangent vectors at each point\r\n    derivatives = cs(t, 1)\r\n    tangents = derivatives / np.linalg.norm(derivatives, axis=1)[:, np.newaxis]\r\n    \r\n    # Calculate local contour and obtain parameters\r\n    Distance = (DesignWidth**2+DesignHeight**2)**(0.5)\r\n    \r\n    RealWidth = []\r\n    RealHeight = []\r\n    \r\n    for i in range(count):\r\n        ContourVertices = np.unique(calculate_local_contour(MeshVertices, MeshTriangles, cp[i], tangents[i], Distance),axis=0)\r\n        point2d = project_to_plane(ContourVertices,cp[i], tangents[i])\r\n\r\n        p1 = np.array([x[0] for x in point2d])\r\n        dis_p1 = round(p1.max() - p1.min(),3)\r\n        if dis_p1 > (DesignWidth+1500):\r\n            RealWidth.append(DesignWidth)\r\n        else:\r\n            RealWidth.append(dis_p1)\r\n\r\n        p2 = np.array([y[1] for y in point2d])\r\n        dis_p2 = round(p2.max() - p2.min(),3)\r\n        if dis_p2 > (DesignHeight+1500):\r\n            RealHeight.append(DesignHeight)\r\n        else:\r\n            RealHeight.append(dis_p2)\r\n    \r\n    SlidePlane = []\r\n    for i in range(count):\r\n        point0 = cp[i]\r\n        a, b, c, d = plane_param(point0, tangents[i])\r\n        plane0 = [a,b,c,d]\r\n        SlidePlane.append(plane0)\r\n              \r\n    ada_points_3d_tem2=[]\r\n    ada_points_3d_tem3=[]\r\n    for i in range(len(cp)):\r\n    # Four points corresponding to adaptive families\r\n        point1 = [-RealWidth[i]/2,RealHeight[i]]\r\n        point2 = [-RealWidth[i]/2,0]\r\n        point3 = [RealWidth[i]/2,0]\r\n        point4 = [RealWidth[i]/2,RealHeight[i]]\r\n        ada_points = np.array([point1,point2,point3,point4])\r\n        for j in range(4):\r\n            plane_params = SlidePlane[i]\r\n            origin = cp[i]\r\n            ada_points_3d_tem1 = get_3dcoordinates_from_plane(ada_points[j], plane_params, origin)\r\n            ada_points_3d_tem2.append(ada_points_3d_tem1)\r\n    ada_points_3d_tem3 = chunk_list(ada_points_3d_tem2)\r\n\r\n    # Group every three cross-section\r\n    ada_points_3d.extend(ada_points_3d_tem3)\r\n\r\noutput = [i for j in ada_points_3d for i in j]\r\n    \r\nOUT = output",
+      "Engine": "CPython3",
+      "EngineName": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "2bbb70566019476890da729a6dfe8a3d",
+      "Inputs": [
+        {
+          "Id": "057cb95513584ff196768cfee3609086",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ae5229632034402698f6549234e704f6",
+          "Name": "IN[1]",
+          "Description": "Input #1",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "b26f7e401da24f5ea513532f3a4a6d2b",
+          "Name": "OUT",
+          "Description": "Python 脚本结果",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "运行嵌入 Python 脚本。"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.Input.Filename, CoreNodeModels",
+      "HintPath": "D:\\PhdData\\MiningBIM\\UG1\\Revit\\Faces.obj",
+      "InputValue": ".\\Faces.obj",
+      "NodeType": "ExtensionNode",
+      "Id": "0cf82b1412f8402b8dba7bf7c7cfb345",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "23e5f49b825145dda676ff6c8e16a112",
+          "Name": "",
+          "Description": "文件路径",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "允许选择系统上某个文件以返回其文件路径"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Revit.Elements.AdaptiveComponent.ByPoints@Autodesk.DesignScript.Geometry.Point[][],Revit.Elements.FamilyType",
+      "Id": "08d53e9d0c2b43b1bb99830e88889fa3",
+      "Inputs": [
+        {
+          "Id": "f47a1456ef6d4b29ba3436dd55e933e1",
+          "Name": "points",
+          "Description": "点的二维数组\n\nPoint[][]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "e8475fea76fd4e619747ae78fd28591d",
+          "Name": "familyType",
+          "Description": "用于创建自适应构件的族类型\n\nFamilyType",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "a685d20696e2400fa2f69caace21c893",
+          "Name": "AdaptiveComponent[]..[]",
+          "Description": "AdaptiveComponent[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "通过点的二维数组创建自适应构件列表\n\nAdaptiveComponent.ByPoints (points: Point[][], familyType: FamilyType): AdaptiveComponent[]..[]"
+    },
+    {
+      "ConcreteType": "DSRevitNodesUI.FamilyTypes, DSRevitNodesUI",
+      "SelectedIndex": 27,
+      "SelectedString": "tunnel_void_UG1:tunnel_void_UG1",
+      "NodeType": "ExtensionNode",
+      "Id": "93670fb3f6e74ff98b50c017b49bccc8",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "a94cdfe7448d4f11bcba0f55fdf87d14",
+          "Name": "Family Type",
+          "Description": "选定的 Family Type",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "文档中所有可用族类型。"
+    },
+    {
+      "ConcreteType": "PythonNodeModels.PythonNode, PythonNodeModels",
+      "NodeType": "PythonScriptNode",
+      "Code": "import sys\r\nimport clr\r\nclr.AddReference('ProtoGeometry')\r\nfrom Autodesk.DesignScript.Geometry import *\r\n\r\npoints_list = IN[0]\r\n\r\ngrouped_points = []\r\n\r\nfor i in range(0, len(points_list), 12):\r\n    grouped_points.append(points_list[i:i+12])\r\n\r\nOUT = grouped_points\r\n",
+      "Engine": "CPython3",
+      "EngineName": "CPython3",
+      "VariableInputPorts": true,
+      "Id": "2e03a9c497d2485c88dfd399ffc6a653",
+      "Inputs": [
+        {
+          "Id": "17910140b30d4523b1977471580eb602",
+          "Name": "IN[0]",
+          "Description": "Input #0",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "fa9d1235fc224ce18f2e7479b0aaec69",
+          "Name": "OUT",
+          "Description": "Python 脚本结果",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "运行嵌入 Python 脚本。"
+    },
+    {
+      "ConcreteType": "CoreNodeModels.FromObject, CoreNodeModels",
+      "NodeType": "ExtensionNode",
+      "Id": "9530a300cea142c28fb4c76689c93285",
+      "Inputs": [
+        {
+          "Id": "99e7b4e4952a4b4990d7b633cacd7948",
+          "Name": "object",
+          "Description": "要系列化的对象",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "a36a141027eb46dd920e78c237d7af59",
+          "Name": "string",
+          "Description": "对象的字符串表示",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "将对象转换为字符串表示。"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "Autodesk.DesignScript.Geometry.Point.ByCoordinates@double,double,double",
+      "Id": "fe75e7a28a8847abb0a4cf4e6aa0b60e",
+      "Inputs": [
+        {
+          "Id": "52e221596efd482f8ab87ed89811ce1f",
+          "Name": "x",
+          "Description": "X 轴坐标\n\ndouble\n默认值 : 0",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "d747c56b630a49b1a634f1f91a0919bd",
+          "Name": "y",
+          "Description": "Y 轴坐标\n\ndouble\n默认值 : 0",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ae9b475b4c69410082f90bad91e1b362",
+          "Name": "z",
+          "Description": "Z 轴坐标\n\ndouble\n默认值 : 0",
+          "UsingDefaultValue": true,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "e83d7d940bec44d88dc612c89c2ab85f",
+          "Name": "Point",
+          "Description": "由坐标创建的点",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "通过给定的 3 个笛卡尔坐标形成一个点\n\nPoint.ByCoordinates (x: double = 0, y: double = 0, z: double = 0): Point"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CodeBlockNodeModel, DynamoCore",
+      "NodeType": "CodeBlockNode",
+      "Code": "x[0];\nx[1];\nx[2];",
+      "Id": "e888740fd65e44298cce3cf79b5ded66",
+      "Inputs": [
+        {
+          "Id": "ce57d324839841aba58e58fced6c7985",
+          "Name": "x",
+          "Description": "x",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "2b67faf2991f498dacaf334fa8a1f450",
+          "Name": "",
+          "Description": "行 1 中的表达式值",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "c1718768bf2e4fdba2b98725f19dd433",
+          "Name": "",
+          "Description": "行 2 中的表达式值",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "6ea4daa6663a4e5895d4e67c5f1ad5fe",
+          "Name": "",
+          "Description": "行 3 中的表达式值",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled",
+      "Description": "允许直接编写 DesignScript 代码"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.String.ToNumber@string",
+      "Id": "a7ef67f463894f03bbf5b0cfa01d18a6",
+      "Inputs": [
+        {
+          "Id": "627dbf5f3d824f4798a62c2d00c47a39",
+          "Name": "string",
+          "Description": "要转换的字符串\n\nstring",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "8377270335a542318c1669bb2463d4f7",
+          "Name": "number",
+          "Description": "整数或双精度数",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "将字符串转换为整数或双精度数。\n\nString.ToNumber (string: string): var[]..[]"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.ZeroTouch.DSFunction, DynamoCore",
+      "NodeType": "FunctionNode",
+      "FunctionSignature": "DSCore.List.Transpose@var[]..[]",
+      "Id": "4224ef70aaf649e6b1fcb140b066c266",
+      "Inputs": [
+        {
+          "Id": "12bf4dc3d16f43c8a950de33847e37e6",
+          "Name": "lists",
+          "Description": "要转置的列表的列表\n\nvar[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "98b2b47e3aff4a8e9e3d6d10047a3287",
+          "Name": "lists",
+          "Description": "已转置的列表的列表",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "在列表的列表中互换行和列。 如果一些行长短不一， 则空值将作为占位符插入结果 数组中，使其始终为矩形。\n\nList.Transpose (lists: var[]..[]): var[]..[]"
+    },
+    {
+      "ConcreteType": "Dynamo.Graph.Nodes.CustomNodes.Function, DynamoCore",
+      "FunctionSignature": "66f78539-8a80-402e-81dc-28a0737ab127",
+      "FunctionType": "Graph",
+      "NodeType": "FunctionNode",
+      "Id": "369a294a71f54ea382542cabe790a6c3",
+      "Inputs": [
+        {
+          "Id": "e8035e7be7fa42fd977b6f6d71272cf4",
+          "Name": "elementToBeCut",
+          "Description": "var[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "ca8d804a48424e9c92b8a92619105980",
+          "Name": "cuttingElement",
+          "Description": "var[]..[]",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Outputs": [
+        {
+          "Id": "ae6355e5bc6e4874a22f6884d5dfdeee",
+          "Name": "success",
+          "Description": "返回值",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "3310292e0d2e4cd6ba7b5a0e8117a7ae",
+          "Name": "elementToBeCut",
+          "Description": "返回值",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        },
+        {
+          "Id": "f64211595b7340c39ca7bffe1abeff38",
+          "Name": "cuttingElement",
+          "Description": "返回值",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Auto",
+      "Description": "Adds a solid-solid cut for two model elements (if possible). "
+    },
+    {
+      "ConcreteType": "Dynamo.Nodes.DSModelElementSelection, DSRevitNodesUI",
+      "NodeType": "ExtensionNode",
+      "InstanceId": [
+        "16e98d2e-3d5a-4eb1-b3dc-8757861f8230-0004ef3e"
+      ],
+      "Id": "3823766b315b40c5bf1accb17678d0d3",
+      "Inputs": [],
+      "Outputs": [
+        {
+          "Id": "3e7f603390ea498d930526bda7358b77",
+          "Name": "Element",
+          "Description": "选定的元素。",
+          "UsingDefaultValue": false,
+          "Level": 2,
+          "UseLevels": false,
+          "KeepListStructure": false
+        }
+      ],
+      "Replication": "Disabled"
+    }
+  ],
+  "Connectors": [
+    {
+      "Start": "c8d71c326f6d405992712b2665979591",
+      "End": "ae5229632034402698f6549234e704f6",
+      "Id": "c402bfaed04e4dab8b54f99c1288d89a",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "b26f7e401da24f5ea513532f3a4a6d2b",
+      "End": "12bf4dc3d16f43c8a950de33847e37e6",
+      "Id": "20bd010efba94e91a9ab658c99d11b5d",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "23e5f49b825145dda676ff6c8e16a112",
+      "End": "057cb95513584ff196768cfee3609086",
+      "Id": "537e92575c4d4fbea3f96538cd3a47c5",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "a685d20696e2400fa2f69caace21c893",
+      "End": "ca8d804a48424e9c92b8a92619105980",
+      "Id": "e52b2eb346414edf8edc04d1ef22411b",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "a94cdfe7448d4f11bcba0f55fdf87d14",
+      "End": "e8475fea76fd4e619747ae78fd28591d",
+      "Id": "fa7b36a5c53b4c74af8136a104da3e59",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "fa9d1235fc224ce18f2e7479b0aaec69",
+      "End": "f47a1456ef6d4b29ba3436dd55e933e1",
+      "Id": "49e98843d24845979389f66886648b17",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "a36a141027eb46dd920e78c237d7af59",
+      "End": "627dbf5f3d824f4798a62c2d00c47a39",
+      "Id": "869f1b388b7147139333104b4c08bb18",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "e83d7d940bec44d88dc612c89c2ab85f",
+      "End": "17910140b30d4523b1977471580eb602",
+      "Id": "1e0d76064acc446293c31f983002a9cb",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "2b67faf2991f498dacaf334fa8a1f450",
+      "End": "52e221596efd482f8ab87ed89811ce1f",
+      "Id": "6e54bf9b00d142d0805d59492bb6f1d9",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "c1718768bf2e4fdba2b98725f19dd433",
+      "End": "d747c56b630a49b1a634f1f91a0919bd",
+      "Id": "ed81a65712da4db2be0121fc64d43f02",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "6ea4daa6663a4e5895d4e67c5f1ad5fe",
+      "End": "ae9b475b4c69410082f90bad91e1b362",
+      "Id": "735fe94f5bf742fbb76d3a7de6d9ce3c",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "8377270335a542318c1669bb2463d4f7",
+      "End": "ce57d324839841aba58e58fced6c7985",
+      "Id": "02a786af56b04ce796b6bfbff45205a5",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "98b2b47e3aff4a8e9e3d6d10047a3287",
+      "End": "99e7b4e4952a4b4990d7b633cacd7948",
+      "Id": "47d2038becc344bfa972ced8ae20359e",
+      "IsHidden": "False"
+    },
+    {
+      "Start": "3e7f603390ea498d930526bda7358b77",
+      "End": "e8035e7be7fa42fd977b6f6d71272cf4",
+      "Id": "b5c1111b518b40259490281773704eeb",
+      "IsHidden": "False"
+    }
+  ],
+  "Dependencies": [
+    "66f78539-8a80-402e-81dc-28a0737ab127"
+  ],
+  "NodeLibraryDependencies": [
+    {
+      "Name": "Clockwork for Dynamo 2.x",
+      "Version": "2.4.0",
+      "ReferenceType": "Package",
+      "Nodes": [
+        "369a294a71f54ea382542cabe790a6c3"
+      ]
+    }
+  ],
+  "Thumbnail": "",
+  "GraphDocumentationURL": null,
+  "ExtensionWorkspaceData": [
+    {
+      "ExtensionGuid": "28992e1d-abb9-417f-8b1b-05e053bee670",
+      "Name": "特性",
+      "Version": "2.17",
+      "Data": {}
+    },
+    {
+      "ExtensionGuid": "DFBD9CC0-DB40-457A-939E-8C8555555A9D",
+      "Name": "Generative Design",
+      "Version": "4.0",
+      "Data": {}
+    }
+  ],
+  "Author": "",
+  "Linting": {
+    "activeLinter": "无",
+    "activeLinterId": "7b75fb44-43fd-4631-a878-29f4d5d8399a",
+    "warningCount": 0,
+    "errorCount": 0
+  },
+  "Bindings": [
+    {
+      "NodeId": "08d53e9d-0c2b-43b1-bb99-830e88889fa3",
+      "Binding": {
+        "ByPoints_InClassDecl-1_InFunctionScope-1_Instance0_08d53e9d-0c2b-43b1-bb99-830e88889fa3": "PFNPQVAtRU5WOkVudmVsb3BlIHhtbG5zOnhzaT0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEtaW5zdGFuY2UiIHhtbG5zOnhzZD0iaHR0cDovL3d3dy53My5vcmcvMjAwMS9YTUxTY2hlbWEiIHhtbG5zOlNPQVAtRU5DPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy9zb2FwL2VuY29kaW5nLyIgeG1sbnM6U09BUC1FTlY9Imh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3NvYXAvZW52ZWxvcGUvIiB4bWxuczpjbHI9Imh0dHA6Ly9zY2hlbWFzLm1pY3Jvc29mdC5jb20vc29hcC9lbmNvZGluZy9jbHIvMS4wIiBTT0FQLUVOVjplbmNvZGluZ1N0eWxlPSJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy9zb2FwL2VuY29kaW5nLyI+DQo8U09BUC1FTlY6Qm9keT4NCjxhMTpDYWxsU2l0ZV94MDAyQl9UcmFjZVNlcmlhbGlzZXJIZWxwZXIgaWQ9InJlZi0xIiB4bWxuczphMT0iaHR0cDovL3NjaGVtYXMubWljcm9zb2Z0LmNvbS9jbHIvbnNhc3NlbS9Qcm90b0NvcmUvUHJvdG9Db3JlJTJDJTIwVmVyc2lvbiUzRDIuMTcuMC4zNDcyJTJDJTIwQ3VsdHVyZSUzRG5ldXRyYWwlMkMlMjBQdWJsaWNLZXlUb2tlbiUzRG51bGwiPg0KPE51bWJlck9mRWxlbWVudHM+MTwvTnVtYmVyT2ZFbGVtZW50cz4NCjxCYXNlLTBfSGFzRGF0YT50cnVlPC9CYXNlLTBfSGFzRGF0YT4NCjxCYXNlLTBfRGF0YSBpZD0icmVmLTMiPlBGTlBRVkF0UlU1V09rVnVkbVZzYjNCbElIaHRiRzV6T25oemFUMGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TVM5WVRVeFRZMmhsYldFdGFXNXpkR0Z1WTJVaUlIaHRiRzV6T25oelpEMGlhSFIwY0RvdkwzZDNkeTUzTXk1dmNtY3ZNakF3TVM5WVRVeFRZMmhsYldFaUlIaHRiRzV6T2xOUFFWQXRSVTVEUFNKb2RIUndPaTh2YzJOb1pXMWhjeTU0Yld4emIyRndMbTl5Wnk5emIyRndMMlZ1WTI5a2FXNW5MeUlnZUcxc2JuTTZVMDlCVUMxRlRsWTlJbWgwZEhBNkx5OXpZMmhsYldGekxuaHRiSE52WVhBdWIzSm5MM052WVhBdlpXNTJaV3h2Y0dVdklpQjRiV3h1Y3pwamJISTlJbWgwZEhBNkx5OXpZMmhsYldGekxtMXBZM0p2YzI5bWRDNWpiMjB2YzI5aGNDOWxibU52WkdsdVp5OWpiSEl2TVM0d0lpQlRUMEZRTFVWT1ZqcGxibU52WkdsdVoxTjBlV3hsUFNKb2RIUndPaTh2YzJOb1pXMWhjeTU0Yld4emIyRndMbTl5Wnk5emIyRndMMlZ1WTI5a2FXNW5MeUkrRFFvOFUwOUJVQzFGVGxZNlFtOWtlVDROQ2p4aE1UcE5kV3gwYVhCc1pWTmxjbWxoYkdsNllXSnNaVWxrSUdsa1BTSnlaV1l0TVNJZ2VHMXNibk02WVRFOUltaDBkSEE2THk5elkyaGxiV0Z6TG0xcFkzSnZjMjltZEM1amIyMHZZMnh5TDI1ellYTnpaVzB2VW1WMmFYUlRaWEoyYVdObGN5NVFaWEp6YVhOMFpXNWpaUzlTWlhacGRGTmxjblpwWTJWekpUSkRKVEl3Vm1WeWMybHZiaVV6UkRJdU1UY3VNQzQzTkRBMEpUSkRKVEl3UTNWc2RIVnlaU1V6Ukc1bGRYUnlZV3dsTWtNbE1qQlFkV0pzYVdOTFpYbFViMnRsYmlVelJHNTFiR3dpUGcwS1BHNTFiV0psY2s5bVJXeGxiV1Z1ZEhNK09Ed3ZiblZ0WW1WeVQyWkZiR1Z0Wlc1MGN6NE5Danh6ZEhKcGJtZEpSQzB3SUdsa1BTSnlaV1l0TXlJK09UZzNPRGN5TmprdE5tUXhZeTAwTm1ZNUxUbGxZalV0WW1FNE9EVm1ObVk0T1dVNExUQXdNRFV4WXpjd1BDOXpkSEpwYm1kSlJDMHdQZzBLUEdsdWRFbEVMVEErTXpNME9UWXdQQzlwYm5SSlJDMHdQZzBLUEhOMGNtbHVaMGxFTFRFZ2FXUTlJbkpsWmkwMElqNDVPRGM0TnpJMk9TMDJaREZqTFRRMlpqa3RPV1ZpTlMxaVlUZzROV1kyWmpnNVpUZ3RNREF3TlRGak4yWThMM04wY21sdVowbEVMVEUrRFFvOGFXNTBTVVF0TVQ0ek16UTVOelU4TDJsdWRFbEVMVEUrRFFvOGMzUnlhVzVuU1VRdE1pQnBaRDBpY21WbUxUVWlQams0TnpnM01qWTVMVFprTVdNdE5EWm1PUzA1WldJMUxXSmhPRGcxWmpabU9EbGxPQzB3TURBMU1XTTRaVHd2YzNSeWFXNW5TVVF0TWo0TkNqeHBiblJKUkMweVBqTXpORGs1TUR3dmFXNTBTVVF0TWo0TkNqeHpkSEpwYm1kSlJDMHpJR2xrUFNKeVpXWXROaUkrT1RnM09EY3lOamt0Tm1ReFl5MDBObVk1TFRsbFlqVXRZbUU0T0RWbU5tWTRPV1U0TFRBd01EVXhZemxrUEM5emRISnBibWRKUkMwelBnMEtQR2x1ZEVsRUxUTStNek0xTURBMVBDOXBiblJKUkMwelBnMEtQSE4wY21sdVowbEVMVFFnYVdROUluSmxaaTAzSWo0NU9EYzROekkyT1MwMlpERmpMVFEyWmprdE9XVmlOUzFpWVRnNE5XWTJaamc1WlRndE1EQXdOVEZqWVdNOEwzTjBjbWx1WjBsRUxUUStEUW84YVc1MFNVUXRORDR6TXpVd01qQThMMmx1ZEVsRUxUUStEUW84YzNSeWFXNW5TVVF0TlNCcFpEMGljbVZtTFRnaVBqazROemczTWpZNUxUWmtNV010TkRabU9TMDVaV0kxTFdKaE9EZzFaalptT0RsbE9DMHdNREExTVdOaVlqd3ZjM1J5YVc1blNVUXROVDROQ2p4cGJuUkpSQzAxUGpNek5UQXpOVHd2YVc1MFNVUXROVDROQ2p4emRISnBibWRKUkMwMklHbGtQU0p5WldZdE9TSStPVGczT0RjeU5qa3RObVF4WXkwME5tWTVMVGxsWWpVdFltRTRPRFZtTm1ZNE9XVTRMVEF3TURVeFkyTmhQQzl6ZEhKcGJtZEpSQzAyUGcwS1BHbHVkRWxFTFRZK016TTFNRFV3UEM5cGJuUkpSQzAyUGcwS1BITjBjbWx1WjBsRUxUY2dhV1E5SW5KbFppMHhNQ0krT1RnM09EY3lOamt0Tm1ReFl5MDBObVk1TFRsbFlqVXRZbUU0T0RWbU5tWTRPV1U0TFRBd01EVXhZMlE1UEM5emRISnBibWRKUkMwM1BnMEtQR2x1ZEVsRUxUYytNek0xTURZMVBDOXBiblJKUkMwM1BnMEtQQzloTVRwTmRXeDBhWEJzWlZObGNtbGhiR2w2WVdKc1pVbGtQZzBLUEM5VFQwRlFMVVZPVmpwQ2IyUjVQZzBLUEM5VFQwRlFMVVZPVmpwRmJuWmxiRzl3WlQ0TkNnPT08L0Jhc2UtMF9EYXRhPg0KPEJhc2UtMF9IYXNOZXN0ZWREYXRhPmZhbHNlPC9CYXNlLTBfSGFzTmVzdGVkRGF0YT4NCjwvYTE6Q2FsbFNpdGVfeDAwMkJfVHJhY2VTZXJpYWxpc2VySGVscGVyPg0KPC9TT0FQLUVOVjpCb2R5Pg0KPC9TT0FQLUVOVjpFbnZlbG9wZT4NCg=="
+      }
+    }
+  ],
+  "View": {
+    "Dynamo": {
+      "ScaleFactor": 10000.0,
+      "HasRunWithoutCrash": true,
+      "IsVisibleInDynamoLibrary": true,
+      "Version": "2.17.0.3472",
+      "RunType": "Manual",
+      "RunPeriod": "1000"
+    },
+    "Camera": {
+      "Name": "背景预览(_B)",
+      "EyeX": -17.0,
+      "EyeY": 24.0,
+      "EyeZ": 50.0,
+      "LookX": 12.0,
+      "LookY": -13.0,
+      "LookZ": -58.0,
+      "UpX": 0.0,
+      "UpY": 1.0,
+      "UpZ": 0.0
+    },
+    "ConnectorPins": [],
+    "NodeViews": [
+      {
+        "Name": "File Path",
+        "ShowGeometry": true,
+        "Id": "645dc97f13ff42bd8a5db9ec5ed27528",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 136.42380001092096,
+        "Y": 75.0534908819688
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "2bbb70566019476890da729a6dfe8a3d",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 448.12108337080133,
+        "Y": -64.398057165631485
+      },
+      {
+        "Name": "File Path",
+        "ShowGeometry": true,
+        "Id": "0cf82b1412f8402b8dba7bf7c7cfb345",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 104.1255854124646,
+        "Y": -69.459782679505793
+      },
+      {
+        "Name": "AdaptiveComponent.ByPoints",
+        "ShowGeometry": true,
+        "Id": "08d53e9d0c2b43b1bb99830e88889fa3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2370.0633100152954,
+        "Y": -75.0587891212416
+      },
+      {
+        "Name": "Family Types",
+        "ShowGeometry": true,
+        "Id": "93670fb3f6e74ff98b50c017b49bccc8",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2371.8960549638832,
+        "Y": 143.42726544888706
+      },
+      {
+        "Name": "Python Script",
+        "ShowGeometry": true,
+        "Id": "2e03a9c497d2485c88dfd399ffc6a653",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2100.6298028751303,
+        "Y": -73.8237246040917
+      },
+      {
+        "Name": "String from Object",
+        "ShowGeometry": true,
+        "Id": "9530a300cea142c28fb4c76689c93285",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1016.94694748606,
+        "Y": -63.0194569674568
+      },
+      {
+        "Name": "Point.ByCoordinates",
+        "ShowGeometry": true,
+        "Id": "fe75e7a28a8847abb0a4cf4e6aa0b60e",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1811.33415546384,
+        "Y": -73.7403233975264
+      },
+      {
+        "Name": "Code Block",
+        "ShowGeometry": true,
+        "Id": "e888740fd65e44298cce3cf79b5ded66",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1580.88720358157,
+        "Y": -61.8750735388562
+      },
+      {
+        "Name": "String.ToNumber",
+        "ShowGeometry": true,
+        "Id": "a7ef67f463894f03bbf5b0cfa01d18a6",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 1301.9944794827,
+        "Y": -62.6856847526217
+      },
+      {
+        "Name": "List.Transpose",
+        "ShowGeometry": true,
+        "Id": "4224ef70aaf649e6b1fcb140b066c266",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 733.099664893138,
+        "Y": -62.3656080997896
+      },
+      {
+        "Name": "Element.CutGeometry",
+        "ShowGeometry": true,
+        "Id": "369a294a71f54ea382542cabe790a6c3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2847.520738063442,
+        "Y": -107.24071595301422
+      },
+      {
+        "Name": "Select Model Element",
+        "ShowGeometry": true,
+        "Id": "3823766b315b40c5bf1accb17678d0d3",
+        "IsSetAsInput": false,
+        "IsSetAsOutput": false,
+        "Excluded": false,
+        "X": 2439.2364655287015,
+        "Y": -249.23664697797173
+      }
+    ],
+    "Annotations": [],
+    "X": -61.8355009369308,
+    "Y": 430.91133450641775,
+    "Zoom": 0.13496344800390198
+  }
+}

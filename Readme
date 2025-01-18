@@ -4,5 +4,7 @@ The present study aims to explore the characteristics and adoption potential of 
 
 In this paper, we provide two cases, UG1 is the automatic reconstruction of mine tunnels from point clouds, and UG2 is the automatic reconstruction of mine tunnels from mesh models and surrounding rock models from borehole data. Here we provide the Dynamo script for automatic reconstruction (including Python execution scripts inside) and the required adaptive family.
 
+Update on Jan. 18th
 
+Now paper has been accepted by International Journal of Rock Mechanics and Mining Sciences, please check: https://doi.org/10.1016/j.ijrmms.2025.106032
 
